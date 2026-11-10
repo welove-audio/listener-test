@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adaptive Audio Service: listener test page</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --fg: #111111; --muted: #3a3a3a; --panel: #eef0f3; --panel-fg: #111111;
+    --field: #ffffff; --field-fg: #111111; --border: #8a8f98; --accent: #0b57d0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171a; --fg: #f2f2f2; --muted: #c8ccd2; --panel: #23272d; --panel-fg: #f2f2f2;
+      --field: #0f1113; --field-fg: #f2f2f2; --border: #5c636d; --accent: #8ab4f8;
+    }
+  }
+  body { font-family: system-ui, sans-serif; margin: 1.5rem; max-width: 60rem; background: var(--bg); color: var(--fg); }
+  fieldset { margin-bottom: 1rem; border: 1px solid var(--border); }
+  legend { color: var(--fg); }
+  label { display: block; margin: 0.3rem 0; }
+  input[type=text], input[type=url], input[type=password] { width: 100%; box-sizing: border-box; font-family: monospace;
+    background: var(--field); color: var(--field-fg); border: 1px solid var(--border); padding: 0.3rem; }
+  button { margin: 0.2rem 0.3rem 0.2rem 0; background: var(--panel); color: var(--panel-fg);
+    border: 1px solid var(--border); padding: 0.35rem 0.8rem; border-radius: 4px; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  a { color: var(--accent); }
+  .hint { color: var(--muted); font-size: 0.9rem; margin: 0.2rem 0 0.6rem; }
+  code { font-size: 0.9em; }
+  table { border-collapse: collapse; margin-bottom: 1rem; }
+  th { text-align: left; padding-right: 1rem; font-weight: normal; color: var(--muted); }
+  td { font-family: monospace; color: var(--fg); }
+  #log { background: var(--panel); color: var(--panel-fg); border: 1px solid var(--border); padding: 0.5rem;
+    height: 18rem; overflow-y: auto; white-space: pre-wrap; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<h1>Listener test page</h1>
+
+<fieldset>
+  <legend>Connection</legend>
+  <p class="hint">The page needs only the project URL and a listener token. The API key and secret never belong in a
+    browser page: whoever holds the secret can mint tokens for every room. Mint the token where the secret is,
+    e.g. <code>python -m aas.tokens.mint --identity listener-1 --room m1a</code>, or open the page with
+    <code>?url=…&amp;token=…</code> already filled in.</p>
+  <label>LiveKit URL (<code>LIVEKIT_URL</code>) <input id="url" type="url" placeholder="wss://&lt;project&gt;.livekit.cloud" autocomplete="off"></label>
+  <label>Listener token (subscribe-only, from <code>aas.tokens.mint</code>) <input id="token" type="password" placeholder="paste the token (never logged or exported)" autocomplete="off"></label>
+  <label>Publisher control endpoint (for Measure and Beep) <input id="control" type="url" value="http://127.0.0.1:8787" autocomplete="off"></label>
+  <label><input id="relay" type="checkbox"> force TURN relay (iceTransportPolicy = relay)</label>
+  <button id="connect" type="button">Connect</button>
+  <button id="disconnect" type="button" disabled>Disconnect</button>
+  <button id="startaudio" type="button" hidden>Start audio</button>
+</fieldset>
+
+<fieldset>
+  <legend>Measurement</legend>
+  <button id="probe" type="button" disabled>Measure (probe)</button>
+  <button id="beep" type="button" disabled>Beep (ear only)</button>
+  <button id="arm" type="button" disabled>Arm (record remote probes)</button>
+  <button id="export" type="button">Export log</button>
+</fieldset>
+
+<table>
+  <tr><th>State</th><td id="state">disconnected</td></tr>
+  <tr><th>Command to ear</th><td id="latency">-</td></tr>
+  <tr><th>Publisher to ear</th><td id="publisher_to_ear">-</td></tr>
+  <tr><th>Correlation PSR</th><td id="psr">-</td></tr>
+  <tr><th>Connection</th><td id="connection">-</td></tr>
+  <tr><th>Bitrate</th><td id="bitrate">-</td></tr>
+  <tr><th>Stereo</th><td id="stereo">-</td></tr>
+  <tr><th>Detector</th><td id="detector">-</td></tr>
+</table>
+
+<audio id="player" autoplay controls></audio>
+
+<h2>Log</h2>
+<pre id="log"></pre>
+
+<script src="https://cdn.jsdelivr.net/npm/livekit-client@2.23.0/dist/livekit-client.umd.min.js" integrity="sha384-5Eup/y0O0HaGMTnRv9dQddV/+npZKkzbmhjrFfyJsiMgphEG4bpxscOotD6/NPPj" crossorigin="anonymous"></script>
+<script src="probe_xcorr.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
